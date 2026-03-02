@@ -7,7 +7,7 @@ import ConvertingFunctions
 
 class PeggerUI(QWidget):
     format_compatibility = {
-        "PNG":  ["JPG", "WEBP", "BMP", "SVG"],
+        "PNG":  ["PNG", "JPG", "WEBP", "BMP", "SVG"],
         "JPG":  ["PNG", "WEBP", "BMP"],
         "WEBP": ["PNG", "JPG", "BMP", "SVG"],
     }
