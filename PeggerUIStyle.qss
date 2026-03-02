@@ -1,0 +1,66 @@
+/* Hauptfenster */
+QWidget {
+    background-color: #1e1e1e;
+    color: #ffffff;
+}
+
+
+#dragAndDropContainer {
+    border: 2px solid #0066cc;
+    border-radius: 9px;
+    background-color: #333333;
+    padding: 0px;
+}
+
+#DragAndDropArea {
+    color: #ffffff;
+    font-size: 14px;
+    background-color: transparent;
+    border: none;
+}
+
+
+#searchButton {
+    background-color: #0066cc;
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 10px 16px;
+    border: none;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+#searchButton:hover {
+    background-color: #0052a3;
+}
+
+QLabel {
+    background-color: transparent;
+}
+
+
+QComboBox {
+    background-color: #333333;
+    color: #ffffff;
+    border: 1px solid #555555;
+    border-radius: 8px;
+    padding: 5px 10px;
+}
+
+
+QPushButton {
+    background-color: #0066cc;
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 10px 16px;
+    border: none;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #0052a3;
+}
+
+QPushButton:pressed {
+    background-color: #003d7a;
+}

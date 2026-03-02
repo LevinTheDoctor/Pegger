@@ -14,7 +14,7 @@ class PeggerUI(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Pegger")
-        self.resize(400, 700)
+        self.resize(600, 800)
 
         with open("PeggerUIStyle.qss", "r") as file:
             stylesheet = file.read()
@@ -24,9 +24,17 @@ class PeggerUI(QWidget):
 
         main_vbox = QVBoxLayout()
 
+        # Der "Suchen" Button AUSSERHALB der Box
+        search_button = QPushButton("Suchen")
+        search_button.setObjectName("searchButton")
+        search_button.clicked.connect(self.open_file_dialog)
+        main_vbox.addWidget(search_button)
+
+        # Die DragAndDropArea mit nur dem Label und Umrandung
         self.drag_and_drop_area = DragAndDropArea(self)
         self.drag_and_drop_area.image_loaded.connect(self.on_image_loaded)
         main_vbox.addWidget(self.drag_and_drop_area)
+
 
         # Format-Auswahl
         format_hbox = QHBoxLayout()
@@ -43,25 +51,34 @@ class PeggerUI(QWidget):
 
         # Button-Bereich
         buttons_hbox = QHBoxLayout()
-        buttons_hbox.addWidget(QPushButton("Zuentfernende Farbe"))
+        color_removal_button = QPushButton("Zu entfernende Farbe")
+        buttons_hbox.addWidget(color_removal_button)
         buttons_hbox.addWidget(QPushButton("Formatieren"))
         main_vbox.addLayout(buttons_hbox)
 
         self.setLayout(main_vbox)
 
+    def open_file_dialog(self):
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Bilddatei auswählen",
+            "",
+            "Bilder (*.png *.jpg *.jpeg *.webp *.bmp);;Alle Dateien (*)"
+        )
+
+        if file_path:
+            self.drag_and_drop_area.load_image_from_path(file_path)
+
     def on_image_loaded(self, file_path):
-        # Erkenne das Format aus der Dateiendung
         file_extension = Path(file_path).suffix.upper().lstrip(".")
 
         if file_extension == "JPEG":
             file_extension = "JPG"
 
         self.current_format = file_extension
-
-        # Aktualisiere das Format-Label
         self.format_label.setText(file_extension)
 
-        # Aktualisiere die ComboBox
         if file_extension in self.format_compatibility:
             self.format_combobox.clear()
             self.format_combobox.addItems(self.format_compatibility[file_extension])
+

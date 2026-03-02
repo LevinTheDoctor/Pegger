@@ -7,9 +7,7 @@ from pathlib import Path
 import io
 
 
-class DragAndDropArea(QWidget):
-    # Das ist das Custom Signal – es wird ausgesendet, wenn ein Bild geladen wurde
-    # Der Parameter ist der Dateipfad des geladenen Bildes
+class DragAndDropArea(QFrame):
     image_loaded = Signal(str)
 
     def __init__(self, parent=None):
@@ -20,7 +18,9 @@ class DragAndDropArea(QWidget):
         self.current_image_path = None
         self.current_image = None
 
+        # Das Layout enthält NUR das Label, nicht den Button
         vbox = QVBoxLayout()
+        vbox.setContentsMargins(20, 20, 20, 20)
 
         self.label = QLabel("Datei per Drag & Drop\noder Datei Suchen")
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -28,13 +28,9 @@ class DragAndDropArea(QWidget):
         self.label.setMinimumHeight(300)
         vbox.addWidget(self.label)
 
-        self.search_button = QPushButton("Suchen")
-        self.search_button.setObjectName("dragDropButton")
-        self.search_button.clicked.connect(self.open_file_dialog)
-        vbox.addWidget(self.search_button, alignment=Qt.AlignmentFlag.AlignCenter)
-
         self.setLayout(vbox)
         self.setObjectName("dragAndDropContainer")
+
 
     def open_file_dialog(self):
         file_path, _ = QFileDialog.getOpenFileName(
@@ -44,24 +40,16 @@ class DragAndDropArea(QWidget):
             "Bilder (*.png *.jpg *.jpeg *.webp *.bmp);;Alle Dateien (*)"
         )
 
-        # Wenn der Nutzer eine Datei ausgewählt hat
         if file_path:
             self.load_image_from_path(file_path)
 
     def load_image_from_path(self, file_path):
-        """
-        Lade ein Bild von einem Dateipfad.
-        Diese Methode wird aufgerufen, sowohl vom File Dialog als auch vom Drag & Drop.
-        """
         try:
             pil_image = Image.open(file_path)
             self.current_image_path = file_path
             self.current_image = pil_image
             self.display_image()
-
-            # Sende das Signal aus, damit das Hauptfenster weiß, dass ein neues Bild geladen wurde
             self.image_loaded.emit(file_path)
-
             return True
         except Exception as e:
             print(f"Fehler beim Laden des Bildes: {e}")
