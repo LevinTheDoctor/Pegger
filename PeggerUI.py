@@ -1,6 +1,8 @@
 from PySide6.QtWidgets import *
 from PySide6.QtCore import Qt
 from pathlib import Path
+from PIL import Image
+import numpy as np
 from DragAndDropArea import DragAndDropArea
 
 
@@ -52,6 +54,7 @@ class PeggerUI(QWidget):
         # Button-Bereich
         buttons_hbox = QHBoxLayout()
         color_removal_button = QPushButton("Zu entfernende Farbe")
+        color_removal_button.clicked.connect(self.on_remove_color_clicked)
         buttons_hbox.addWidget(color_removal_button)
         buttons_hbox.addWidget(QPushButton("Formatieren"))
         main_vbox.addLayout(buttons_hbox)
@@ -82,3 +85,44 @@ class PeggerUI(QWidget):
             self.format_combobox.clear()
             self.format_combobox.addItems(self.format_compatibility[file_extension])
 
+    def on_remove_color_clicked(self):
+        """Wird aufgerufen, wenn 'Farbe entfernen' geklickt wird"""
+        if self.drag_and_drop_area.current_image is None:
+            QMessageBox.warning(self, "Fehler", "Erst ein Bild laden!")
+            return
+
+        # Aktiviere den Color Picker
+        self.drag_and_drop_area.activate_color_picker()
+        QMessageBox.information(self, "Color Picker", "Klicke auf das Bild, um eine Farbe auszuwählen!")
+
+        # Verbinde das Signal mit einer Methode
+        try:
+            self.drag_and_drop_area.color_picked.disconnect()  # Trenne alte Verbindungen
+        except RuntimeError:
+            pass  # Keine Verbindung vorhanden
+        self.drag_and_drop_area.color_picked.connect(self.on_color_picked)
+
+    def on_color_picked(self, color):
+        """Wird aufgerufen, wenn eine Farbe ausgewählt wurde"""
+        try:
+            img = self.drag_and_drop_area.current_image.convert("RGBA")
+            data = np.array(img, dtype=np.int16)
+
+            r, g, b = color
+            tolerance = 30
+
+            mask = (
+                (np.abs(data[:, :, 0] - r) <= tolerance) &
+                (np.abs(data[:, :, 1] - g) <= tolerance) &
+                (np.abs(data[:, :, 2] - b) <= tolerance)
+            )
+            data[mask] = [0, 0, 0, 0]  # Transparent
+
+            result_image = Image.fromarray(data.astype(np.uint8), "RGBA")
+            self.drag_and_drop_area.current_image = result_image
+            self.drag_and_drop_area.display_image()
+
+            QMessageBox.information(self, "Erfolg", f"Farbe RGB{color} wurde entfernt!")
+
+        except Exception as e:
+            QMessageBox.critical(self, "Fehler", f"Fehler: {str(e)}")

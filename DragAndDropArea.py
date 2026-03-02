@@ -9,6 +9,7 @@ import io
 
 class DragAndDropArea(QFrame):
     image_loaded = Signal(str)
+    color_picked = Signal(tuple)  # Neues Signal für die ausgewählte Farbe
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -17,8 +18,8 @@ class DragAndDropArea(QFrame):
 
         self.current_image_path = None
         self.current_image = None
+        self.is_color_picker_active = False  # Flag, ob wir gerade eine Farbe auswählen
 
-        # Das Layout enthält NUR das Label, nicht den Button
         vbox = QVBoxLayout()
         vbox.setContentsMargins(20, 20, 20, 20)
 
@@ -31,6 +32,89 @@ class DragAndDropArea(QFrame):
         self.setLayout(vbox)
         self.setObjectName("dragAndDropContainer")
 
+    def activate_color_picker(self):
+        """Aktiviere den Color Picker Modus"""
+        if self.current_image is None:
+            return False
+
+        self.is_color_picker_active = True
+
+        self.setCursor(Qt.CursorShape.CrossCursor)
+        return True
+
+    def deactivate_color_picker(self):
+        """Deaktiviere den Color Picker Modus"""
+        self.is_color_picker_active = False
+        self.setCursor(Qt.CursorShape.ArrowCursor)
+
+    def mousePressEvent(self, event):
+        """Wird aufgerufen, wenn der Nutzer klickt"""
+        if not self.is_color_picker_active or self.current_image is None:
+            return
+
+        # Berechne die Position des Klicks relativ zum Label
+        label_pos = self.label.mapFromGlobal(event.globalPos())
+
+        # Prüfe, ob der Klick im Label war
+        if not self.label.rect().contains(label_pos):
+            return
+
+        # Berechne die Position im Original-Bild
+        # Das Label ist skaliert, also musst du die Koordinaten anpassen
+        label_width = self.label.width()
+        label_height = self.label.height()
+
+        # Hole die Größe des aktuellen Pixmaps (das skalierte Bild)
+        if self.label.pixmap() is None:
+            return
+
+        pixmap = self.label.pixmap()
+        pixmap_width = pixmap.width()
+        pixmap_height = pixmap.height()
+
+        # Berechne, wo das Pixmap im Label positioniert ist (zentriert)
+        x_offset = (label_width - pixmap_width) // 2
+        y_offset = (label_height - pixmap_height) // 2
+
+        # Berechne die Position im skaliertem Bild
+        x_in_pixmap = label_pos.x() - x_offset
+        y_in_pixmap = label_pos.y() - y_offset
+
+        # Prüfe, ob der Klick im Bild-Bereich war
+        if x_in_pixmap < 0 or y_in_pixmap < 0 or x_in_pixmap >= pixmap_width or y_in_pixmap >= pixmap_height:
+            return
+
+        # Skaliere die Koordinaten zum Original-Bild
+        scale_x = self.current_image.width / pixmap_width
+        scale_y = self.current_image.height / pixmap_height
+
+        x_in_original = int(x_in_pixmap * scale_x)
+        y_in_original = int(y_in_pixmap * scale_y)
+
+        # Lese die Pixel-Farbe aus dem Original-Bild
+        try:
+            color = self.current_image.getpixel((x_in_original, y_in_original))
+
+            # Konvertiere zu RGB, falls das Bild einen Alpha-Kanal hat
+            if isinstance(color, tuple) and len(color) == 4:
+                color = color[:3]  # Nimm nur RGB, nicht Alpha
+            elif isinstance(color, tuple) and len(color) == 3:
+                pass  # Ist schon RGB
+            else:
+                # Ist vielleicht Grayscale, konvertiere zu RGB
+                if isinstance(color, int):
+                    color = (color, color, color)
+
+            # Sende das Signal mit der Farbe
+            self.color_picked.emit(color)
+
+            # Deaktiviere den Color Picker
+            self.deactivate_color_picker()
+
+            print(f"Farbe ausgewählt: RGB{color}")
+
+        except Exception as e:
+            print(f"Fehler beim Auslesen der Pixel-Farbe: {e}")
 
     def open_file_dialog(self):
         file_path, _ = QFileDialog.getOpenFileName(
