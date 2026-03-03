@@ -7,7 +7,6 @@ OPTIONS = {
     "iconfile": "MyIcon.icns",
     "packages": [
         "PySide6",
-        "PIL",
         "numpy",
         "vtracer",
     ],
