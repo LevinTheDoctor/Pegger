@@ -1,7 +1,16 @@
+import subprocess
 from setuptools import setup
 
 APP = ["main.py"]
-DATA_FILES = [("", ["PeggerUIStyle.qss"])]
+
+# FFmpeg-Pfade zur Build-Zeit ermitteln (Homebrew)
+_ffmpeg  = subprocess.run(["which", "ffmpeg"],  capture_output=True, text=True).stdout.strip()
+_ffprobe = subprocess.run(["which", "ffprobe"], capture_output=True, text=True).stdout.strip()
+
+DATA_FILES = [
+    ("", ["PeggerUIStyle.qss"]),
+    ("ffmpeg_bin", [_ffmpeg, _ffprobe]),
+]
 
 OPTIONS = {
     "iconfile": "MyIcon.icns",
