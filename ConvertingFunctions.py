@@ -33,11 +33,19 @@ def _flatten_alpha(image: Image.Image) -> Image.Image:
 
 
 def save_image(image: Image.Image, path: str, target_format: str):
-    """Speichert ein PIL-Image im Zielformat. Unterstützt PNG, JPG, WEBP, BMP, SVG."""
+    """Speichert ein PIL-Image im Zielformat. Unterstützt PNG, JPG, WEBP, BMP, SVG, ICO, ICNS."""
     fmt = target_format.upper()
 
     if fmt == "SVG":
         _save_as_svg(image, path)
+        return
+
+    if fmt == "ICO":
+        _save_as_ico(image, path)
+        return
+
+    if fmt == "ICNS":
+        _save_as_icns(image, path)
         return
 
     pil_format = "JPEG" if fmt == "JPG" else fmt
@@ -46,6 +54,40 @@ def save_image(image: Image.Image, path: str, target_format: str):
         image = _flatten_alpha(image)
 
     image.save(path, format=pil_format)
+
+
+def _save_as_ico(image: Image.Image, path: str):
+    """Speichert als Windows-Icon (.ico) mit Standard-Größen."""
+    img = image.convert("RGBA")
+    img.save(path, format="ICO", sizes=[(16, 16), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)])
+
+
+def _save_as_icns(image: Image.Image, path: str):
+    """Speichert als macOS-Icon (.icns) via iconutil."""
+    import subprocess
+
+    img = image.convert("RGBA")
+    iconset_sizes = [16, 32, 128, 256, 512]
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        iconset_path = os.path.join(tmp_dir, "icon.iconset")
+        os.makedirs(iconset_path)
+
+        for size in iconset_sizes:
+            img.resize((size, size), Image.LANCZOS).save(
+                os.path.join(iconset_path, f"icon_{size}x{size}.png")
+            )
+            img.resize((size * 2, size * 2), Image.LANCZOS).save(
+                os.path.join(iconset_path, f"icon_{size}x{size}@2x.png")
+            )
+
+        result = subprocess.run(
+            ["iconutil", "-c", "icns", iconset_path, "-o", path],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"iconutil fehlgeschlagen:\n{result.stderr}")
 
 
 def _save_as_svg(image: Image.Image, path: str):

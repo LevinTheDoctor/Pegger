@@ -7,9 +7,9 @@ import ConvertingFunctions
 
 class PeggerUI(QWidget):
     format_compatibility = {
-        "PNG":  ["PNG", "JPG", "WEBP", "BMP", "SVG"],
-        "JPG":  ["PNG", "WEBP", "BMP"],
-        "WEBP": ["PNG", "JPG", "BMP", "SVG"],
+        "PNG":  ["PNG", "JPG", "WEBP", "BMP", "SVG", "ICO", "ICNS"],
+        "JPG":  ["PNG", "WEBP", "BMP", "ICO"],
+        "WEBP": ["PNG", "JPG", "BMP", "SVG", "ICO", "ICNS"],
     }
 
     format_extensions = {
@@ -18,6 +18,8 @@ class PeggerUI(QWidget):
         "WEBP": "*.webp",
         "BMP": "*.bmp",
         "SVG": "*.svg",
+        "ICO": "*.ico",
+        "ICNS": "*.icns",
     }
 
     def __init__(self):
